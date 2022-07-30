@@ -15,5 +15,8 @@ main: main.c:72: write_memeory: Assertion `ret==0' failed.
 ```
 ### Problems 
 
-* mapped memory error
+Please checkout the [stackoverflow post](https://stackoverflow.com/questions/73178306/how-to-mprotect-existing-address-to-enable-prot-write-without-using-mmap-i?noredirect=1#comment129242330_73178306)
+
+* mapped memory error (Need to do with mmap)
+
 

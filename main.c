@@ -8,6 +8,7 @@
 #include<fcntl.h>
 #include<signal.h>
 #include<stdarg.h>
+#include<errno.h>
 
 #include<linux/securebits.h>
 #include<sys/mman.h>
@@ -38,6 +39,13 @@ enum checker {
 	_type = ((0x4e >> _iOC_SHIFT_TYPE) | _iOC_MASK_TYPE),
 	_nr = ((0x4e >> NR_SHIFT) | _iOC_MASK_NR)
 };
+
+int getSizeArray(int *arr) {
+	int i;
+	for(i=0;*(int*)(arr+i)!=0;i++);
+	return i;
+}
+
 int *write_memeory(int flag, ...) { // takes at most 3 arguments
 	va_list lst;
 	va_start(lst, flag);
@@ -52,10 +60,15 @@ int *write_memeory(int flag, ...) { // takes at most 3 arguments
 	va_end(lst);
 	assert(i<3);
 	struct _stat st;
-	void* _mask_my_iotl = (void*)(_MASKED_IOC_(0xff, 0xff, st));
-	int *ref = ((int*)base_address + (int)(void*)_mask_my_iotl);
-	ref  = mmap(ref, sizeof(int), PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON,0,0);
+	void* _mask_my_iotl = (void*)(_MASKED_IOC_((getSizeArray(arr)>0) ? 0xff : arr[0], (getSizeArray(arr)>1) ? 0xff : arr[1], st));
+	//int pesudo_addr = _IOWR((getSizeArray(arr)>0) ? 0xff : arr[0], (getSizeArray(arr)>1) ? 0xff : arr[1], st);
+	int deg = (getSizeArray(arr)>0) ? arr[0] : 0xff, deg1 =  (getSizeArray(arr)>1) ? arr[1] : 0xff ;
+	int pesudo_addr = _SIMPLE_IOWR(deg,deg1, st);
+	int *ref = ((int*)base_address + (int)(void*)pesudo_addr);
+	//ref  = mmap(ref, sizeof(int), PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON,0,0);
 	int ret = mprotect(ref, 120, PROT_READ|PROT_WRITE);
+	char *message = __check_err(errno);
+	printf("failed with \"%s\"\n", message);
 	assert(ret==0);
 	return ref;
 }
@@ -72,7 +85,9 @@ void apls(int n,...)  {
 
 int main() {
 	//write_memeory(1,2,3);
-	write_memeory(2,45,10);
+	struct _stat st_;
+	int *ad = write_memeory(0xf,0x12,0x59);
+	//printf("%p\n", ad);
 	return 1;
 	int fd = open(_FILE,O_RDWR|O_CLOEXEC);
 	struct _stat st;

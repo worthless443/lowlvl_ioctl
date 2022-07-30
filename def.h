@@ -27,18 +27,8 @@
 #define _IOWR_SIMPLE(nr,size) _IOC(1U|2U,  0xff, (nr), _IOC_TYPECHECK(size));
 		 
 
-
 // ------ //
 // error //
-#define MESSAGE(err) ({ int MESSAGE; switch(err){ \
-         case ERROR_NO_MEMORY:           \
-                MESSAGE = MSG_NO_MEMORY;       \
-            case ERROR_INVALID_INDEX:       \
-                MESSAGE = MSG_INVALID_INDEX;   \
-            case ERROR_INVALID_VALUE:       \
-                MESSAGE = MSG_INVALID_VALUE;   \
-         }; MESSAGE; })
-
 				
 #define __check_err(err)  ({ \
 		char *message; switch(err) { \
