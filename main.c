@@ -9,6 +9,7 @@
 #include<signal.h>
 #include<stdarg.h>
 #include<errno.h>
+#include<stdint.h>
 
 #include<linux/securebits.h>
 #include<sys/mman.h>
@@ -46,7 +47,7 @@ int getSizeArray(int *arr) {
 	return i;
 }
 
-int *write_memeory(int flag, ...) { // takes at most 3 arguments
+void *write_memeory(int flag, ...) { // takes at most 3 arguments
 	va_list lst;
 	va_start(lst, flag);
 	int a, arr[4], i=0;
@@ -64,13 +65,24 @@ int *write_memeory(int flag, ...) { // takes at most 3 arguments
 	//int pesudo_addr = _IOWR((getSizeArray(arr)>0) ? 0xff : arr[0], (getSizeArray(arr)>1) ? 0xff : arr[1], st);
 	int deg = (getSizeArray(arr)>0) ? arr[0] : 0xff, deg1 =  (getSizeArray(arr)>1) ? arr[1] : 0xff ;
 	int pesudo_addr = _SIMPLE_IOWR(deg,deg1, st);
-	int *ref = ((int*)base_address + (int)(void*)pesudo_addr);
+	uintptr_t ref = base_address + (pesudo_addr*3);
+	uintptr_t ref1 = base_address + 0x10;
+	uintptr_t o_ref = base_address;
+	size_t memsize = getSize(0x10);
+	printf("%ld\n", ref - memsize);
+	while((o_ref + (uintptr_t)memsize)<=ref1)  { 
+		printf("niggerd\n");
+		memsize+=PAGE_SIZE;
+	}
 	//ref  = mmap(ref, sizeof(int), PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON,0,0);
-	int ret = mprotect(ref, 120, PROT_READ|PROT_WRITE);
-	char *message = __check_err(errno);
-	printf("failed with \"%s\"\n", message);
+	int ret = mprotect((void*)(o_ref & ~(0xfff)), memsize, PROT_READ|PROT_EXEC|PROT_WRITE);
+	printf("addr = %ld\n", ref);
+	if(errno!=0) {
+		char *message = __check_err(errno);
+		printf("failed with \"%s\"\n", message);
+	}
 	assert(ret==0);
-	return ref;
+	return (void*)ref;
 }
 
 void apls(int n,...)  {
@@ -86,9 +98,9 @@ void apls(int n,...)  {
 int main() {
 	//write_memeory(1,2,3);
 	struct _stat st_;
-	int *ad = write_memeory(0xf,0x12,0x59);
+	int *ad = write_memeory(0xf,0xff,0xff);
 	//printf("%p\n", ad);
-	return 1;
+	return 0;
 	int fd = open(_FILE,O_RDWR|O_CLOEXEC);
 	struct _stat st;
 	int fd_w_noblock = open(_FILE,O_NONBLOCK);
