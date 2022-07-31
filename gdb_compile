@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gcc -I./ main.c -Wno-int-to-pointer-cast -o main && gdb -batch -ex 'file main' -ex 'run'
