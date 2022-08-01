@@ -40,3 +40,6 @@
 			message = "ENOMEM";}; message;  })
 		
 
+#define PAGE_SIZE 0x1000
+#define getSize(size) (size_t)((size) + ((size) - ((size) % PAGE_SIZE)))
+
